@@ -1,0 +1,21 @@
+[package]
+name = "p2p-voice"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cpal = "0.15.2"
+opus = "0.3.0"
+anyhow = "1.0"
+eframe = "0.27"
+tungstenite = { version = "0.21.0", features = ["rustls-tls-webpki-roots"] }
+url = "2.5.0"
+self_update = { version = "0.42", features = ["archive-zip"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+semver = "1.0"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+panic = 'abort'
