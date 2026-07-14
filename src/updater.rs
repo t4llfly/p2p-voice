@@ -23,7 +23,7 @@ pub fn check_for_updates(info: Arc<Mutex<UpdateInfo>>) {
     std::thread::spawn(move || {
         let repo_owner = "t4llfly";
         let repo_name = "p2p-voice";
-        let bin_name = "p2p-voice";
+        let bin_name = "p2p-voice.exe";
 
         let status = self_update::backends::github::Update::configure()
             .repo_owner(repo_owner)
@@ -32,7 +32,8 @@ pub fn check_for_updates(info: Arc<Mutex<UpdateInfo>>) {
             .show_download_progress(true)
             .current_version(cargo_crate_version!())
             .no_confirm(true)
-            .build();
+            .build()
+            .map_err(|e| e.to_string());
 
         match status {
             Ok(updater) => match updater.get_latest_release() {
