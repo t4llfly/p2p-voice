@@ -26,7 +26,7 @@ pub struct AuthResponse {
     pub config_json: Option<String>,
 }
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, PartialEq)]
 #[serde(default)]
 pub struct AppConfig {
     pub server_url: String,
@@ -132,6 +132,33 @@ impl P2PApp {
             is_updating: false,
         }
     }
+
+    fn sync_config_to_cloud(&self) {
+        if self.config.auth_token.is_empty() {
+            return;
+        }
+
+        let server_url = self.config.server_url.clone();
+        let token = self.config.auth_token.clone();
+
+        let config_json = serde_json::to_string(&self.config).unwrap_or_else(|_| "{}".to_string());
+
+        std::thread::spawn(move || {
+            let scheme = if server_url.contains("localhost") || server_url.contains("127.0.0.1") {
+                "http"
+            } else {
+                "https"
+            };
+            let url = format!("{}://{}/api/config", scheme, server_url);
+
+            let body = serde_json::json!({
+                "token": token,
+                "config_json": config_json
+            });
+
+            let _ = ureq::post(&url).send_json(body);
+        });
+    }
 }
 
 impl eframe::App for P2PApp {
@@ -140,6 +167,8 @@ impl eframe::App for P2PApp {
     }
 
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        let old_config = self.config.clone();
+
         if let Some(rx) = &self.auth_rx {
             if let Ok(response) = rx.try_recv() {
                 self.is_authenticating = false;
@@ -149,6 +178,19 @@ impl eframe::App for P2PApp {
                         self.current_screen = AppScreen::Main;
                         self.password_input.clear();
                         self.auth_message.clear();
+
+                        if let Some(config_str) = response.config_json {
+                            if !config_str.is_empty() && config_str != "{}" {
+                                if let Ok(cloud_config) =
+                                    serde_json::from_str::<AppConfig>(&config_str)
+                                {
+                                    self.config.selected_input = cloud_config.selected_input;
+                                    self.config.selected_output = cloud_config.selected_output;
+                                    self.config.show_overlay = cloud_config.show_overlay;
+                                    println!("Конфиг успешно загружен из облака!");
+                                }
+                            }
+                        }
                     } else {
                         self.auth_message = "Регистрация успешна! Теперь войдите.".into();
                         self.current_screen = AppScreen::Login;
@@ -169,6 +211,10 @@ impl eframe::App for P2PApp {
         }
 
         crate::ui::render(ctx, self);
+
+        if self.config != old_config {
+            self.sync_config_to_cloud();
+        }
 
         if self.is_connected {
             ctx.request_repaint_after(std::time::Duration::from_millis(66));
