@@ -2,6 +2,8 @@
 
 A peer-to-peer voice communication application built with Rust, featuring real-time audio streaming, automatic NAT traversal, and a modern GUI.
 
+**Languages:** [English](README.md) | [Русский](README_ru.md) | [日本語](README_ja.md)
+
 ## Features
 
 - **Peer-to-Peer Architecture**: Direct UDP communication between clients with no central media server
