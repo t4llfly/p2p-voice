@@ -91,7 +91,7 @@ pub fn render(ctx: &egui::Context, app: &mut P2PApp) {
 
         if app.config.show_overlay && app.is_connected {
             let overlay_builder = egui::ViewportBuilder::default()
-                .with_title("P2P Overlay")
+                .with_title("VVcall Overlay")
                 .with_transparent(true)
                 .with_decorations(false)
                 .with_always_on_top()
