@@ -14,14 +14,10 @@ fn main() -> eframe::Result<()> {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([650.0, 520.0])
             .with_min_inner_size([650.0, 520.0])
-            .with_title("P2P Voice"),
+            .with_title("VVcall"),
         renderer: eframe::Renderer::Glow,
         ..Default::default()
     };
 
-    eframe::run_native(
-        "P2P Voice",
-        options,
-        Box::new(|cc| Box::new(P2PApp::new(cc))),
-    )
+    eframe::run_native("VVcall", options, Box::new(|cc| Box::new(P2PApp::new(cc))))
 }

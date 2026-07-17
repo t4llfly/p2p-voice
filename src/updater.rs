@@ -21,7 +21,7 @@ impl Default for UpdateInfo {
 }
 
 fn get_bin_name() -> String {
-    format!("p2p-voice{}", std::env::consts::EXE_SUFFIX)
+    format!("vvcall{}", std::env::consts::EXE_SUFFIX)
 }
 
 fn get_target_match() -> &'static str {
@@ -40,8 +40,8 @@ fn get_target_match() -> &'static str {
 
 pub fn check_for_updates(info: Arc<Mutex<UpdateInfo>>) {
     std::thread::spawn(move || {
-        let repo_owner = "t4llfly";
-        let repo_name = "p2p-voice";
+        let repo_owner = "vvcall-dev";
+        let repo_name = "client";
 
         let status = self_update::backends::github::Update::configure()
             .repo_owner(repo_owner)
@@ -80,8 +80,8 @@ pub fn check_for_updates(info: Arc<Mutex<UpdateInfo>>) {
 }
 
 pub fn perform_update() -> Result<(), String> {
-    let repo_owner = "t4llfly";
-    let repo_name = "p2p-voice";
+    let repo_owner = "vvcall-dev";
+    let repo_name = "client";
 
     let status = self_update::backends::github::Update::configure()
         .repo_owner(repo_owner)

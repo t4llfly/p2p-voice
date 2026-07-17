@@ -1,6 +1,6 @@
 [package]
-name = "p2p-voice"
-version = "0.5.0"
+name = "vvcall"
+version = "0.6.0"
 edition = "2024"
 
 [dependencies]

@@ -1,4 +1,4 @@
-# P2P Voice
+# VVcall Voice
 
 Приложение для голосовой связи peer-to-peer, созданное на Rust, с потоковой передачей аудио в реальном времени, автоматической обходом NAT и современным графическим интерфейсом.
 
@@ -33,12 +33,12 @@
 
 ### Из релизов
 
-Загрузите последнюю версию для вашей платформы со страницы [Releases](https://github.com/tallfly/p2p-voice/releases):
+Загрузите последнюю версию для вашей платформы со страницы [Releases](https://github.com/vvcall-dev/client/releases):
 
-- **Windows**: `p2p-voice-windows.exe`
-- **Linux**: `p2p-voice-linux`
-- **macOS ARM64** (Apple Silicon): `p2p-voice-macos-arm64`
-- **macOS x86_64** (Intel): `p2p-voice-macos-x86_64`
+- **Windows**: `vvcall-windows.exe`
+- **Linux**: `vvcall-linux`
+- **macOS ARM64** (Apple Silicon): `vvcall-macos-arm64`
+- **macOS x86_64** (Intel): `vvcall-macos-x86_64`
 
 ### Сборка из исходного кода
 
@@ -63,16 +63,16 @@ sudo apt-get install libasound2-dev pkg-config cmake build-essential libssl-dev
 
 ```bash
 # Клонировать репозиторий
-git clone https://github.com/tallfly/p2p-voice.git
-cd p2p-voice
+git clone https://github.com/vvcall-dev/client.git
+cd client
 
 # Собрать в режиме релиза
 cargo build --release
 ```
 
 Бинарный файл будет расположен:
-- **Windows**: `target/release/p2p-voice.exe`
-- **Linux/macOS**: `target/release/p2p-voice`
+- **Windows**: `target/release/vvcall.exe`
+- **Linux/macOS**: `target/release/vvcall`
 
 ## Использование
 

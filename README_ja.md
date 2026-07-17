@@ -1,4 +1,4 @@
-# P2P Voice
+# VVcall Voice
 
 Rust で構築されたピアツーピア音声通信アプリケーションで、リアルタイムオーディオストリーミング、自動 NAT トラバーサル、モダンな GUI を備えています。
 
@@ -33,12 +33,12 @@ Rust で構築されたピアツーピア音声通信アプリケーションで
 
 ### リリースから
 
-[リリースページ](https://github.com/tallfly/p2p-voice/releases) からお使いのプラットフォーム向けの最新リリースをダウンロードしてください：
+[リリースページ](https://github.com/vvcall-dev/client/releases) からお使いのプラットフォーム向けの最新リリースをダウンロードしてください：
 
-- **Windows**: `p2p-voice-windows.exe`
-- **Linux**: `p2p-voice-linux`
-- **macOS ARM64** (Apple Silicon): `p2p-voice-macos-arm64`
-- **macOS x86_64** (Intel): `p2p-voice-macos-x86_64`
+- **Windows**: `vvcall-windows.exe`
+- **Linux**: `vvcall-linux`
+- **macOS ARM64** (Apple Silicon): `vvcall-macos-arm64`
+- **macOS x86_64** (Intel): `vvcall-macos-x86_64`
 
 ### ソースからのビルド
 
@@ -63,16 +63,16 @@ sudo apt-get install libasound2-dev pkg-config cmake build-essential libssl-dev
 
 ```bash
 # リポジトリをクローン
-git clone https://github.com/tallfly/p2p-voice.git
-cd p2p-voice
+git clone https://github.com/vvcall-dev/client.git
+cd client
 
 # リリースモードでビルド
 cargo build --release
 ```
 
 バイナリは以下の場所に配置されます：
-- **Windows**: `target/release/p2p-voice.exe`
-- **Linux/macOS**: `target/release/p2p-voice`
+- **Windows**: `target/release/vvcall.exe`
+- **Linux/macOS**: `target/release/vvcall`
 
 ## 使用方法
 

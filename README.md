@@ -1,4 +1,4 @@
-# P2P Voice
+# VVcall Voice
 
 A peer-to-peer voice communication application built with Rust, featuring real-time audio streaming, automatic NAT traversal, and a modern GUI.
 
@@ -33,12 +33,12 @@ A peer-to-peer voice communication application built with Rust, featuring real-t
 
 ### From Releases
 
-Download the latest release for your platform from the [Releases page](https://github.com/tallfly/p2p-voice/releases):
+Download the latest release for your platform from the [Releases page](https://github.com/vvcall-dev/client/releases):
 
-- **Windows**: `p2p-voice-windows.exe`
-- **Linux**: `p2p-voice-linux`
-- **macOS ARM64** (Apple Silicon): `p2p-voice-macos-arm64`
-- **macOS x86_64** (Intel): `p2p-voice-macos-x86_64`
+- **Windows**: `vvcall-windows.exe`
+- **Linux**: `vvcall-linux`
+- **macOS ARM64** (Apple Silicon): `vvcall-macos-arm64`
+- **macOS x86_64** (Intel): `vvcall-macos-x86_64`
 
 ### Building from Source
 
@@ -63,16 +63,16 @@ sudo apt-get install libasound2-dev pkg-config cmake build-essential libssl-dev
 
 ```bash
 # Clone the repository
-git clone https://github.com/tallfly/p2p-voice.git
-cd p2p-voice
+git clone https://github.com/vvcall-dev/client.git
+cd client
 
 # Build in release mode
 cargo build --release
 ```
 
 The binary will be located at:
-- **Windows**: `target/release/p2p-voice.exe`
-- **Linux/macOS**: `target/release/p2p-voice`
+- **Windows**: `target/release/vvcall.exe`
+- **Linux/macOS**: `target/release/vvcall`
 
 ## Usage
 
