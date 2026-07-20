@@ -7,6 +7,20 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex, atomic::AtomicBool, mpsc::Receiver};
+use std::time::{Duration, Instant};
+
+#[derive(Deserialize, Serialize, Clone, Copy, PartialEq)]
+pub enum Language {
+    Russian,
+    English,
+    Japanese,
+}
+
+impl Default for Language {
+    fn default() -> Self {
+        Language::Russian
+    }
+}
 
 #[derive(PartialEq)]
 pub enum AppScreen {
@@ -32,6 +46,7 @@ pub struct AppConfig {
     pub selected_input: String,
     pub selected_output: String,
     pub show_overlay: bool,
+    pub language: Language,
 }
 
 impl Default for AppConfig {
@@ -43,12 +58,16 @@ impl Default for AppConfig {
             selected_input: "".to_string(),
             selected_output: "".to_string(),
             show_overlay: false,
+            language: Language::Russian,
         }
     }
 }
 
 pub struct P2PApp {
     pub config: AppConfig,
+    pub show_settings: bool,
+
+    pub last_config_change: Option<Instant>,
 
     pub current_screen: AppScreen,
     pub password_input: String,
@@ -72,10 +91,28 @@ pub struct P2PApp {
     pub is_updating: bool,
 }
 
+fn setup_custom_fonts(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+
+    fonts.font_data.insert(
+        "mplus".to_owned(),
+        egui::FontData::from_static(include_bytes!("../assets/mplus.ttf")),
+    );
+
+    fonts
+        .families
+        .get_mut(&egui::FontFamily::Proportional)
+        .unwrap()
+        .insert(0, "mplus".to_owned());
+
+    ctx.set_fonts(fonts);
+}
+
 pub fn load_icon_data() -> egui::IconData {
     let svg_data = include_str!("../assets/icon.svg");
 
-    let fontdb = usvg::fontdb::Database::new();
+    let mut fontdb = usvg::fontdb::Database::new();
+    fontdb.load_system_fonts();
     let rtree = usvg::Tree::from_str(svg_data, &usvg::Options::default(), &fontdb).unwrap();
 
     let size = 32;
@@ -96,6 +133,8 @@ pub fn load_icon_data() -> egui::IconData {
 
 impl P2PApp {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        setup_custom_fonts(&cc.egui_ctx);
+
         let mut config = AppConfig::default();
         if let Some(storage) = cc.storage {
             if let Some(saved_config) = eframe::get_value(storage, eframe::APP_KEY) {
@@ -129,12 +168,13 @@ impl P2PApp {
 
         Self {
             config,
+            show_settings: false,
             current_screen: initial_screen,
+            last_config_change: None,
             password_input: String::new(),
             auth_message: String::new(),
             is_authenticating: false,
             auth_rx: None,
-
             room_name: "default".to_owned(),
             room_password: "".to_owned(),
             is_connected: false,
@@ -175,7 +215,9 @@ impl P2PApp {
                 "config_json": config_json
             });
 
-            let _ = ureq::post(&url).send_json(body);
+            let _ = ureq::post(&url)
+                .timeout(Duration::from_secs(5))
+                .send_json(body);
         });
     }
 }
@@ -232,11 +274,22 @@ impl eframe::App for P2PApp {
         crate::ui::render(ctx, self);
 
         if self.config != old_config {
-            self.sync_config_to_cloud();
+            self.last_config_change = Some(Instant::now());
+        }
+
+        if let Some(last_change) = self.last_config_change {
+            if last_change.elapsed() > Duration::from_millis(1500) {
+                self.sync_config_to_cloud();
+                self.last_config_change = None;
+            }
         }
 
         if self.is_connected {
-            ctx.request_repaint_after(std::time::Duration::from_millis(66));
+            ctx.request_repaint_after(Duration::from_millis(66));
+        }
+
+        if self.last_config_change.is_some() {
+            ctx.request_repaint_after(Duration::from_millis(100));
         }
     }
 }

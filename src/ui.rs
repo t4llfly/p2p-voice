@@ -1,9 +1,89 @@
-use crate::app::{AppScreen, AuthResponse, P2PApp};
+use crate::app::{AppScreen, AuthResponse, Language, P2PApp};
 use crate::audio;
 use crate::engine;
 use eframe::egui;
 use std::sync::atomic::Ordering;
 use std::time::Instant;
+
+pub fn tr(key: &str, lang: Language) -> &str {
+    match lang {
+        Language::Russian => match key {
+            "settings" => "Настройки",
+            "connect" => "Подключиться",
+            "disconnect" => "Отключиться",
+            "mic" => "Микрофон",
+            "output" => "Динамики",
+            "overlay" => "Игровой оверлей",
+            "room" => "Комната",
+            "room_pass" => "Пароль комнаты",
+            "nick" => "Никнейм",
+            "server" => "Сервер",
+            "lang" => "Язык",
+            "update_list" => "Обновить устройства",
+            "waiting" => "Ожидание собеседников...",
+            "logout" => "Выйти из аккаунта",
+            "login_title" => "Вход в аккаунт",
+            "register_title" => "Регистрация",
+            "login" => "Логин",
+            "password" => "Пароль",
+            "btn_login" => "Войти",
+            "btn_register" => "Зарегистрироваться",
+            "no_account" => "Нет аккаунта? Зарегистрироваться",
+            "have_account" => "Уже есть аккаунт? Войти",
+            _ => key,
+        },
+        Language::English => match key {
+            "settings" => "Settings",
+            "connect" => "Connect",
+            "disconnect" => "Disconnect",
+            "mic" => "Microphone",
+            "output" => "Speakers",
+            "overlay" => "Game Overlay",
+            "room" => "Room",
+            "room_pass" => "Room Password",
+            "nick" => "Nickname",
+            "server" => "Server URL",
+            "lang" => "Language",
+            "update_list" => "Refresh Devices",
+            "waiting" => "Waiting for peers...",
+            "logout" => "Log Out",
+            "login_title" => "Account Login",
+            "register_title" => "Registration",
+            "login" => "Username",
+            "password" => "Password",
+            "btn_login" => "Log In",
+            "btn_register" => "Register",
+            "no_account" => "No account? Register here",
+            "have_account" => "Already have an account? Log in",
+            _ => key,
+        },
+        Language::Japanese => match key {
+            "settings" => "設定",
+            "connect" => "接続する",
+            "disconnect" => "切断する",
+            "mic" => "マイク",
+            "output" => "スピーカー",
+            "overlay" => "オーバーレイ",
+            "room" => "ルーム名",
+            "room_pass" => "ルームのパスワード",
+            "nick" => "ニックネーム",
+            "server" => "サーバー",
+            "lang" => "言語",
+            "update_list" => "デバイスを更新",
+            "waiting" => "待機中...",
+            "logout" => "ログアウト",
+            "login_title" => "ログイン",
+            "register_title" => "新規登録",
+            "login" => "ユーザー名",
+            "password" => "パスワード",
+            "btn_login" => "ログイン",
+            "btn_register" => "登録する",
+            "no_account" => "アカウントがありませんか？登録",
+            "have_account" => "すでにアカウントをお持ちですか？ログイン",
+            _ => key,
+        },
+    }
+}
 
 pub fn render(ctx: &egui::Context, app: &mut P2PApp) {
     match app.current_screen {
@@ -137,109 +217,372 @@ pub fn render(ctx: &egui::Context, app: &mut P2PApp) {
 }
 
 fn draw_main_screen(ctx: &egui::Context, app: &mut P2PApp) {
-    egui::SidePanel::left("controls")
-        .exact_width(280.0)
-        .resizable(false)
-        .show(ctx, |ui| {
-            ui.add_space(11.0);
-            ui.heading(egui::RichText::new("⚙ Настройки").strong());
-            ui.add_space(5.0);
-            ui.separator();
-            ui.add_space(5.0);
+    let lang = app.config.language;
 
-            egui::TopBottomPanel::bottom("status_panel")
-                .frame(egui::Frame::none().inner_margin(egui::Margin::symmetric(0.0, 8.0)))
-                .show_inside(ui, |ui| {
-                    ui.add_space(8.0);
-                    ui.vertical_centered(|ui| {
-                        let status = app.status_text.lock().unwrap().clone();
-                        ui.label(
-                            egui::RichText::new(status)
-                                .small()
-                                .color(egui::Color32::GRAY),
-                        );
-                    });
-                });
+    egui::TopBottomPanel::top("top_bar").show(ctx, |ui| {
+        ui.add_space(4.0);
+        ui.horizontal(|ui| {
+            ui.heading(egui::RichText::new("VVcall").strong());
+            ui.label(
+                egui::RichText::new(format!("v{}", env!("CARGO_PKG_VERSION")))
+                    .small()
+                    .color(egui::Color32::GRAY),
+            );
 
-            egui::CentralPanel::default()
-                .frame(egui::Frame::none())
-                .show_inside(ui, |ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        ui.add_space(5.0);
-                        draw_connection(ui, app);
-                        ui.add_space(15.0);
-                        draw_devices(ui, app);
-                        ui.add_space(15.0);
-                        draw_controls(ui, app);
-                        ui.add_space(10.0);
-                        if ui.button("🚪 Выйти из аккаунта").clicked() {
-                            app.config.auth_token.clear();
-                            app.current_screen = AppScreen::Login;
-                        }
-                    });
-                });
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.label(egui::RichText::new(&app.config.username).strong());
+            });
         });
+        ui.add_space(4.0);
+    });
+
+    egui::TopBottomPanel::bottom("bottom_bar").show(ctx, |ui| {
+        ui.add_space(6.0);
+        ui.horizontal(|ui| {
+            let muted = app.is_muted.load(Ordering::Relaxed);
+            let mic_color = if muted {
+                egui::Color32::RED
+            } else {
+                ui.visuals().text_color()
+            };
+            if ui
+                .button(egui::RichText::new("🎤").size(18.0).color(mic_color))
+                .on_hover_text(tr("mic", lang))
+                .clicked()
+            {
+                app.is_muted.store(!muted, Ordering::Relaxed);
+            }
+
+            let deafened = app.is_deafened.load(Ordering::Relaxed);
+            let out_color = if deafened {
+                egui::Color32::RED
+            } else {
+                ui.visuals().text_color()
+            };
+            if ui
+                .button(egui::RichText::new("🎧").size(18.0).color(out_color))
+                .on_hover_text(tr("output", lang))
+                .clicked()
+            {
+                app.is_deafened.store(!deafened, Ordering::Relaxed);
+            }
+
+            ui.separator();
+
+            let status = app.status_text.lock().unwrap().clone();
+            ui.label(egui::RichText::new(status).small());
+
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                if app.is_connected {
+                    if ui
+                        .button(
+                            egui::RichText::new(tr("disconnect", lang))
+                                .color(egui::Color32::LIGHT_RED),
+                        )
+                        .clicked()
+                    {
+                        app.kill_signal.store(true, Ordering::Relaxed);
+                        app.is_connected = false;
+                        *app.status_text.lock().unwrap() = "Отключено".to_string();
+                        app.active_peers.lock().unwrap().clear();
+                        std::thread::sleep(std::time::Duration::from_millis(200));
+                    }
+                } else {
+                    if ui
+                        .button(
+                            egui::RichText::new(tr("connect", lang)).color(egui::Color32::GREEN),
+                        )
+                        .clicked()
+                    {
+                        app.is_connected = true;
+                        app.kill_signal.store(false, Ordering::Relaxed);
+                        *app.status_text.lock().unwrap() = "Инициализация...".to_string();
+                        engine::start_voice_engine(
+                            app.config.server_url.clone(),
+                            app.config.username.clone(),
+                            app.room_name.clone(),
+                            app.room_password.clone(),
+                            app.config.selected_input.clone(),
+                            app.config.selected_output.clone(),
+                            app.volume_level.clone(),
+                            app.status_text.clone(),
+                            app.kill_signal.clone(),
+                            app.is_muted.clone(),
+                            app.is_deafened.clone(),
+                            app.active_peers.clone(),
+                        );
+                    }
+                }
+
+                if ui
+                    .button(egui::RichText::new(tr("settings", lang)))
+                    .clicked()
+                {
+                    app.show_settings = !app.show_settings;
+                }
+            });
+        });
+        ui.add_space(6.0);
+    });
 
     egui::CentralPanel::default().show(ctx, |ui| {
-        ui.add_space(5.0);
-        ui.heading(egui::RichText::new("👥 Участники").strong());
-        ui.add_space(5.0);
-        ui.separator();
-        ui.add_space(5.0);
+        egui::ScrollArea::vertical().show(ui, |ui| {
+            let mut peers = app.active_peers.lock().unwrap();
+            if peers.is_empty() {
+                ui.vertical_centered(|ui| {
+                    ui.add_space(ui.available_height() / 2.0 - 20.0);
+                    ui.label(egui::RichText::new(tr("waiting", lang)).color(egui::Color32::GRAY));
+                });
+            } else {
+                let now = Instant::now();
+                ui.add_space(5.0);
+                for (_addr, state) in peers.iter_mut() {
+                    egui::Frame::group(ui.style())
+                        .rounding(egui::Rounding::same(8.0))
+                        .fill(ui.visuals().faint_bg_color)
+                        .inner_margin(egui::Margin::symmetric(12.0, 8.0))
+                        .show(ui, |ui| {
+                            ui.set_width(ui.available_width());
 
-        draw_peers(ui, app);
+                            let is_speaking =
+                                now.duration_since(state.last_spoken).as_millis() < 300;
+
+                            ui.horizontal(|ui| {
+                                let (icon, color) = if is_speaking {
+                                    ("🔊", egui::Color32::GREEN)
+                                } else {
+                                    ("🔈", ui.visuals().text_color())
+                                };
+                                ui.label(egui::RichText::new(icon).color(color).size(20.0));
+
+                                ui.vertical(|ui| {
+                                    ui.label(egui::RichText::new(&state.name).strong().size(15.0));
+                                    ui.label(
+                                        egui::RichText::new(format!("{} ms", state.ping_ms))
+                                            .small()
+                                            .color(egui::Color32::GRAY),
+                                    );
+                                });
+
+                                ui.with_layout(
+                                    egui::Layout::right_to_left(egui::Align::Center),
+                                    |ui| {
+                                        ui.add_space(5.0);
+
+                                        ui.add(
+                                            egui::Slider::new(&mut state.volume, 0.0..=2.0)
+                                                .show_value(true)
+                                                .smart_aim(false),
+                                        );
+                                    },
+                                );
+                            });
+                        });
+                    ui.add_space(8.0);
+                }
+            }
+        });
     });
+
+    if app.show_settings {
+        let mut is_open = app.show_settings;
+
+        egui::Window::new(tr("settings", lang))
+            .open(&mut is_open)
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .default_width(320.0)
+            .show(ctx, |ui| {
+                draw_settings_content(ui, app, lang);
+            });
+
+        app.show_settings = is_open;
+    }
+}
+
+fn draw_settings_content(ui: &mut egui::Ui, app: &mut P2PApp, lang: Language) {
+    egui::ScrollArea::vertical()
+        .max_height(350.0)
+        .show(ui, |ui| {
+            ui.label(egui::RichText::new(tr("lang", lang)).strong());
+            ui.horizontal(|ui| {
+                let total_width = ui.available_width();
+                let spacing = ui.spacing().item_spacing.x;
+                let btn_width = (total_width - (spacing * 2.0)) / 3.0;
+                let btn_height = 24.0;
+
+                if ui
+                    .add_sized(
+                        [btn_width, btn_height],
+                        egui::SelectableLabel::new(app.config.language == Language::Russian, "RU"),
+                    )
+                    .clicked()
+                {
+                    app.config.language = Language::Russian;
+                }
+                if ui
+                    .add_sized(
+                        [btn_width, btn_height],
+                        egui::SelectableLabel::new(app.config.language == Language::English, "EN"),
+                    )
+                    .clicked()
+                {
+                    app.config.language = Language::English;
+                }
+                if ui
+                    .add_sized(
+                        [btn_width, btn_height],
+                        egui::SelectableLabel::new(
+                            app.config.language == Language::Japanese,
+                            "日本語",
+                        ),
+                    )
+                    .clicked()
+                {
+                    app.config.language = Language::Japanese;
+                }
+            });
+            ui.separator();
+
+            ui.label(egui::RichText::new("Network").strong());
+            ui.label(tr("server", lang));
+            ui.add(
+                egui::TextEdit::singleline(&mut app.config.server_url).desired_width(f32::INFINITY),
+            );
+            ui.label(tr("nick", lang));
+            ui.add(
+                egui::TextEdit::singleline(&mut app.config.username).desired_width(f32::INFINITY),
+            );
+            ui.label(tr("room", lang));
+            ui.add(egui::TextEdit::singleline(&mut app.room_name).desired_width(f32::INFINITY));
+            ui.label(tr("room_pass", lang));
+            ui.add(
+                egui::TextEdit::singleline(&mut app.room_password)
+                    .password(true)
+                    .desired_width(f32::INFINITY),
+            );
+            ui.separator();
+
+            ui.label(egui::RichText::new("Audio").strong());
+            ui.label(tr("mic", lang));
+            egui::ComboBox::from_id_source("mic")
+                .selected_text(&app.config.selected_input)
+                .width(ui.available_width())
+                .show_ui(ui, |ui| {
+                    for dev in &app.available_inputs {
+                        ui.selectable_value(&mut app.config.selected_input, dev.clone(), dev);
+                    }
+                });
+
+            ui.label(tr("output", lang));
+            egui::ComboBox::from_id_source("out")
+                .selected_text(&app.config.selected_output)
+                .width(ui.available_width())
+                .show_ui(ui, |ui| {
+                    for dev in &app.available_outputs {
+                        ui.selectable_value(&mut app.config.selected_output, dev.clone(), dev);
+                    }
+                });
+
+            ui.add_space(5.0);
+            if ui
+                .add_sized(
+                    [ui.available_width(), 30.0],
+                    egui::Button::new(tr("update_list", lang)),
+                )
+                .clicked()
+            {
+                let (ins, outs) = audio::get_audio_devices();
+                app.available_inputs = ins;
+                app.available_outputs = outs;
+            }
+            ui.separator();
+
+            ui.checkbox(&mut app.config.show_overlay, tr("overlay", lang));
+            ui.separator();
+
+            if ui
+                .add_sized(
+                    [ui.available_width(), 30.0],
+                    egui::Button::new(tr("logout", lang)),
+                )
+                .clicked()
+            {
+                app.config.auth_token.clear();
+                app.current_screen = AppScreen::Login;
+                app.show_settings = false;
+            }
+        });
 }
 
 fn draw_auth_screen(ctx: &egui::Context, app: &mut P2PApp, is_login: bool) {
+    let lang = app.config.language;
+
+    egui::TopBottomPanel::top("auth_top")
+        .frame(egui::Frame::none())
+        .show(ctx, |ui| {
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.add_space(10.0);
+                ui.horizontal(|ui| {
+                    ui.selectable_value(&mut app.config.language, Language::Russian, "RU");
+                    ui.selectable_value(&mut app.config.language, Language::English, "EN");
+                    ui.selectable_value(&mut app.config.language, Language::Japanese, "日本語");
+                });
+            });
+        });
+
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.vertical_centered(|ui| {
             ui.add_space(20.0);
             let title = if is_login {
-                "Вход в аккаунт"
+                tr("login_title", lang)
             } else {
-                "Регистрация"
+                tr("register_title", lang)
             };
-            ui.label(egui::RichText::new(title).size(20.0));
-            ui.add_space(15.0);
+            ui.label(egui::RichText::new(title).size(24.0).strong());
+            ui.add_space(20.0);
 
             ui.horizontal(|ui| {
                 ui.add_space(ui.available_width() / 2.0 - 125.0);
                 ui.vertical(|ui| {
-                    ui.label("Сервер:");
+                    ui.label(tr("server", lang));
                     ui.add_sized(
-                        [250.0, 20.0],
+                        [250.0, 25.0],
                         egui::TextEdit::singleline(&mut app.config.server_url),
                     );
 
                     ui.add_space(10.0);
-                    ui.label("Логин:");
+                    ui.label(tr("login", lang));
                     ui.add_sized(
-                        [250.0, 20.0],
+                        [250.0, 25.0],
                         egui::TextEdit::singleline(&mut app.config.username),
                     );
 
                     ui.add_space(10.0);
-                    ui.label("Пароль:");
+                    ui.label(tr("password", lang));
                     ui.add_sized(
-                        [250.0, 20.0],
+                        [250.0, 25.0],
                         egui::TextEdit::singleline(&mut app.password_input).password(true),
                     );
                 });
             });
 
-            ui.add_space(20.0);
+            ui.add_space(25.0);
 
             if app.is_authenticating {
                 ui.spinner();
             } else {
                 let btn_text = if is_login {
-                    "Войти"
+                    tr("btn_login", lang)
                 } else {
-                    "Зарегистрироваться"
+                    tr("btn_register", lang)
                 };
                 if ui
-                    .add_sized([250.0, 35.0], egui::Button::new(btn_text))
+                    .add_sized(
+                        [250.0, 35.0],
+                        egui::Button::new(egui::RichText::new(btn_text).size(16.0)),
+                    )
                     .clicked()
                 {
                     app.is_authenticating = true;
@@ -260,7 +603,9 @@ fn draw_auth_screen(ctx: &egui::Context, app: &mut P2PApp, is_login: bool) {
             ui.add_space(10.0);
 
             if !app.auth_message.is_empty() {
-                let color = if app.auth_message.contains("успешна") {
+                let color = if app.auth_message.contains("успешна")
+                    || app.auth_message.contains("Success")
+                {
                     egui::Color32::GREEN
                 } else {
                     egui::Color32::RED
@@ -271,13 +616,12 @@ fn draw_auth_screen(ctx: &egui::Context, app: &mut P2PApp, is_login: bool) {
             ui.add_space(20.0);
 
             if is_login {
-                if ui.link("Нет аккаунта? Зарегистрироваться").clicked()
-                {
+                if ui.link(tr("no_account", lang)).clicked() {
                     app.current_screen = AppScreen::Register;
                     app.auth_message.clear();
                 }
             } else {
-                if ui.link("Уже есть аккаунт? Войти").clicked() {
+                if ui.link(tr("have_account", lang)).clicked() {
                     app.current_screen = AppScreen::Login;
                     app.auth_message.clear();
                 }
@@ -339,182 +683,6 @@ fn spawn_auth_request(
                     token: None,
                     config_json: None,
                 });
-            }
-        }
-    });
-}
-
-fn draw_connection(ui: &mut egui::Ui, app: &mut P2PApp) {
-    ui.label("🌐 Сервер:");
-    ui.add(egui::TextEdit::singleline(&mut app.config.server_url).desired_width(f32::INFINITY));
-
-    ui.add_space(5.0);
-
-    ui.label("👤 Никнейм:");
-    ui.add(egui::TextEdit::singleline(&mut app.config.username).desired_width(f32::INFINITY));
-
-    ui.add_space(5.0);
-
-    ui.label("🚪 Название комнаты:");
-    ui.add(egui::TextEdit::singleline(&mut app.room_name).desired_width(f32::INFINITY));
-
-    ui.add_space(5.0);
-
-    ui.label("🔑 Пароль комнаты:");
-    ui.add(
-        egui::TextEdit::singleline(&mut app.room_password)
-            .password(true)
-            .desired_width(f32::INFINITY),
-    );
-}
-
-fn draw_devices(ui: &mut egui::Ui, app: &mut P2PApp) {
-    ui.label("🎤 Микрофон:");
-    egui::ComboBox::from_id_source("mic")
-        .selected_text(&app.config.selected_input)
-        .width(ui.available_width())
-        .show_ui(ui, |ui| {
-            for dev in &app.available_inputs {
-                ui.selectable_value(&mut app.config.selected_input, dev.clone(), dev);
-            }
-        });
-
-    ui.add_space(5.0);
-
-    ui.label("🎧 Динамики:");
-    egui::ComboBox::from_id_source("out")
-        .selected_text(&app.config.selected_output)
-        .width(ui.available_width())
-        .show_ui(ui, |ui| {
-            for dev in &app.available_outputs {
-                ui.selectable_value(&mut app.config.selected_output, dev.clone(), dev);
-            }
-        });
-
-    ui.add_space(5.0);
-
-    if ui.button("🔄 Обновить список устройств").clicked() {
-        let (ins, outs) = audio::get_audio_devices();
-        app.available_inputs = ins;
-        app.available_outputs = outs;
-    }
-}
-
-fn draw_controls(ui: &mut egui::Ui, app: &mut P2PApp) {
-    let mut muted = app.is_muted.load(Ordering::Relaxed);
-    if ui.checkbox(&mut muted, "🔇 Выключить микрофон").changed() {
-        app.is_muted.store(muted, Ordering::Relaxed);
-    }
-
-    let mut deafened = app.is_deafened.load(Ordering::Relaxed);
-    if ui
-        .checkbox(&mut deafened, "🔈 Выключить динамики")
-        .changed()
-    {
-        app.is_deafened.store(deafened, Ordering::Relaxed);
-    }
-
-    ui.add_space(5.0);
-
-    ui.checkbox(&mut app.config.show_overlay, "🔲 Игровой оверлей");
-
-    ui.add_space(15.0);
-
-    let btn_height = 35.0;
-
-    if app.is_connected {
-        if ui
-            .add_sized(
-                [ui.available_width(), btn_height],
-                egui::Button::new(egui::RichText::new("Отключиться").size(16.0)),
-            )
-            .clicked()
-        {
-            app.kill_signal.store(true, Ordering::Relaxed);
-            app.is_connected = false;
-            *app.status_text.lock().unwrap() = "Отключено".to_string();
-            app.active_peers.lock().unwrap().clear();
-            std::thread::sleep(std::time::Duration::from_millis(200));
-        }
-    } else {
-        if ui
-            .add_sized(
-                [ui.available_width(), btn_height],
-                egui::Button::new(egui::RichText::new("Подключиться").size(16.0)),
-            )
-            .clicked()
-        {
-            app.is_connected = true;
-            app.kill_signal.store(false, Ordering::Relaxed);
-            *app.status_text.lock().unwrap() = "Инициализация...".to_string();
-            engine::start_voice_engine(
-                app.config.server_url.clone(),
-                app.config.username.clone(),
-                app.room_name.clone(),
-                app.room_password.clone(),
-                app.config.selected_input.clone(),
-                app.config.selected_output.clone(),
-                app.volume_level.clone(),
-                app.status_text.clone(),
-                app.kill_signal.clone(),
-                app.is_muted.clone(),
-                app.is_deafened.clone(),
-                app.active_peers.clone(),
-            );
-        }
-    }
-}
-
-fn draw_peers(ui: &mut egui::Ui, app: &mut P2PApp) {
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        let mut peers = app.active_peers.lock().unwrap();
-        if peers.is_empty() {
-            ui.vertical_centered(|ui| {
-                ui.add_space(ui.available_height() / 2.0 - 20.0);
-                ui.label(egui::RichText::new("Ждем собеседников...").color(egui::Color32::GRAY));
-            });
-        } else {
-            let now = Instant::now();
-
-            for (_addr, state) in peers.iter_mut() {
-                egui::Frame::group(ui.style())
-                    .rounding(egui::Rounding::same(8.0))
-                    .fill(ui.visuals().faint_bg_color)
-                    .inner_margin(10.0)
-                    .show(ui, |ui| {
-                        ui.set_width(ui.available_width());
-
-                        let is_speaking = now.duration_since(state.last_spoken).as_millis() < 300;
-
-                        ui.horizontal(|ui| {
-                            let (icon, color) = if is_speaking {
-                                ("🔊", egui::Color32::GREEN)
-                            } else {
-                                ("🔈", ui.visuals().text_color())
-                            };
-
-                            ui.label(egui::RichText::new(icon).color(color).size(20.0));
-
-                            ui.vertical(|ui| {
-                                ui.label(egui::RichText::new(&state.name).strong().size(15.0));
-                                ui.label(
-                                    egui::RichText::new(format!("Пинг: {} мс", state.ping_ms))
-                                        .small()
-                                        .color(egui::Color32::GRAY),
-                                );
-                            });
-                        });
-
-                        ui.add_space(8.0);
-
-                        ui.horizontal(|ui| {
-                            ui.label("Громкость:");
-                            ui.add(
-                                egui::Slider::new(&mut state.volume, 0.0..=2.0).show_value(false),
-                            );
-                        });
-                    });
-                ui.add_space(8.0);
             }
         }
     });
