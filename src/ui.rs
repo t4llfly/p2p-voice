@@ -157,6 +157,7 @@ pub fn render(ctx: &egui::Context, app: &mut P2PApp) {
                         .clicked()
                     {
                         app.show_update_dialog = false;
+                        app.update_declined = true;
                     }
                 });
 

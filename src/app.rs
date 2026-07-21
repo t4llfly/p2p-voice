@@ -3,6 +3,7 @@ use crate::models::PeerState;
 use crate::updater::{UpdateInfo, check_for_updates};
 use eframe::egui;
 use resvg::usvg;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -88,6 +89,7 @@ pub struct P2PApp {
     pub available_outputs: Vec<String>,
     pub update_info: Arc<Mutex<UpdateInfo>>,
     pub show_update_dialog: bool,
+    pub update_declined: bool,
     pub is_updating: bool,
 }
 
@@ -188,6 +190,7 @@ impl P2PApp {
             available_outputs: outputs,
             update_info,
             show_update_dialog: false,
+            update_declined: false,
             is_updating: false,
         }
     }
@@ -262,11 +265,17 @@ impl eframe::App for P2PApp {
             }
         }
 
-        if !self.show_update_dialog {
-            let info = self.update_info.lock().unwrap();
-            if let Some(latest) = &info.latest_version {
-                if latest != &info.current_version {
-                    self.show_update_dialog = true;
+        if !self.show_update_dialog && !self.update_declined {
+            if let Ok(info) = self.update_info.try_lock() {
+                if let Some(latest_str) = &info.latest_version {
+                    let current_res = Version::parse(&info.current_version.trim_start_matches('v'));
+                    let latest_res = Version::parse(latest_str.trim_start_matches('v'));
+
+                    if let (Ok(current), Ok(latest)) = (current_res, latest_res) {
+                        if latest > current {
+                            self.show_update_dialog = true;
+                        }
+                    }
                 }
             }
         }
